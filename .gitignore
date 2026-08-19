@@ -1,0 +1,8 @@
+data/*
+!data/README.md
+models/
+*.joblib
+*.parquet
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
