@@ -4,7 +4,7 @@
 Frozen hyperparameters (notebook 03, documented decisions 2-3):
   RandomForest: n_estimators=300, class_weight='balanced', min_samples_leaf=10
   XGBoost:      tree_method='hist', n_estimators=300, max_depth=8,
-                learning_rate=0.1, objective='multi:softprob'
+                learning_rate=0.1 (objective inferred by the sklearn wrapper)
 Task: multi-class over {benign + families present in the unit's training data}.
 """
 import time
@@ -45,8 +45,7 @@ def train_xgb(X, y, seed: int):
     le = LabelEncoder(); yi = le.fit_transform(y)
     w = compute_sample_weight('balanced', yi)
     m = XGBClassifier(tree_method='hist', n_estimators=300, max_depth=8,
-                      learning_rate=0.1, objective='multi:softprob',
-                      num_class=len(le.classes_), random_state=seed,
+                      learning_rate=0.1, random_state=seed,
                       n_jobs=-1, verbosity=0)
     t0 = time.time(); m.fit(X, yi, sample_weight=w)
     m._label_encoder_classes = le.classes_          # for decoding predictions
@@ -77,7 +76,7 @@ def cal_sanity(m, splits_dir: Path, corpus, heldout, known, feat,
               & (d['family'].isin(list(known) + ['benign']))]
         if not len(d): continue
         yp = m.predict(d[feat].to_numpy(np.float32))
-        if classes is not None: yp = classes[yp]
+        if classes is not None: yp = classes[np.asarray(yp).astype(int)]
         correct += int((yp == d['family'].to_numpy()).sum()); total += len(d)
         del d
     return correct / max(total, 1), total
